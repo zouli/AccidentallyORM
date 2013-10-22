@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using AccidentallyORM.Entity;
 
@@ -32,11 +33,28 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlQueryFactory<T> Select(string sqlString)
+        public SqlQueryFactory<T> Select(string fieldName)
         {
+            Select(fieldName, null);
+            return this;
+        }
+
+        public SqlQueryFactory<T> Select(string fieldName, params string[] fieldNames2)
+        {
+            var field = SqlFieldFactory<T>.SqlFields[fieldName];
+
             Sql = new StringBuilder();
             Sql.Append("SELECT ");
-            Sql.Append(sqlString);
+            Sql.Append(field.FieldName);
+
+            if (fieldNames2 != null && fieldNames2.Length > 0)
+            {
+                foreach (var field2 in fieldNames2.Select(fieldName2 => SqlFieldFactory<T>.SqlFields[fieldName2]))
+                {
+                    Sql.Append(",");
+                    Sql.Append(field2.FieldName);
+                }
+            }
 
             From();
 

@@ -7,7 +7,7 @@ using AccidentallyORM.Entity.Attribute;
 
 namespace AccidentallyORM.SqlFactory
 {
-    public class SqlFieldFactory<T> where T : EntityBase
+    public class SqlFieldFactory<T> where T : EntityBase, new()
     {
         public static Dictionary<string, DataFieldAttribute> SqlFields = EntityHelper.GetFieldAttributes<T>();
 
@@ -49,6 +49,16 @@ namespace AccidentallyORM.SqlFactory
         public SqlFieldFactory<T> IsNotNull()
         {
             CompareString.Append(" IS NOT NULL");
+            return this;
+        }
+
+        public SqlFieldFactory<T> In<TSub>(SqlQueryFactory<TSub> subQuery) where TSub : EntityBase, new()
+        {
+            CompareString.Append(" IN (");
+            CompareString.Append(subQuery.ToSql());
+            CompareString.Append(")");
+
+            Parameters.AddRange(subQuery.Parameters);
             return this;
         }
 

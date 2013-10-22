@@ -6,7 +6,7 @@ using AccidentallyORM.Entity;
 
 namespace AccidentallyORM.SqlFactory
 {
-    public class SqlFactoryBase<T> where T : EntityBase
+    public class SqlFactoryBase<T> where T : EntityBase, new()
     {
         protected internal List<DbParameter> Parameters = new List<DbParameter>();
         protected StringBuilder Sql = new StringBuilder();
