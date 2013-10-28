@@ -25,7 +25,7 @@ namespace AccidentallyORM.SqlFactory
         public SqlDeleteFactory<T> Where(SqlFieldFactory<T> sqlFieldFactory)
         {
             _sqlWhere.Append(" WHERE ");
-            _sqlWhere.Append(sqlFieldFactory);
+            _sqlWhere.Append(sqlFieldFactory.ToString());
 
             Parameters.AddRange(sqlFieldFactory.Parameters);
 

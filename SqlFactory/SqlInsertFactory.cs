@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using AccidentallyORM.DBHelper;
 using AccidentallyORM.Entity;
 using AccidentallyORM.Entity.Attribute;
@@ -17,24 +19,36 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
+        public SqlInsertFactory<T> Fields(params Expression<Func<T, object>>[] predicate)
+        {
+            var usingFields = predicate.Select(EntityHelper.GetPropertyName).ToArray();
+            return Fields(usingFields);
+        }
+
         public SqlInsertFactory<T> Fields(params string[] usingFields)
         {
             if (usingFields.Length > 0)
             {
                 foreach (var field in usingFields)
                 {
-                    _sqlUsingFields.Add(field, SqlFieldFactory<T>.SqlFields[field]);
+                    _sqlUsingFields.Add(field, SqlFields[field]);
                 }
             }
             else
             {
-                _sqlUsingFields = SqlFieldFactory<T>.SqlFields;
+                _sqlUsingFields = SqlFields;
             }
 
             Sql.Append(" (");
             Sql.Append(string.Join(",", EntityHelper.GetFieldNames(_sqlUsingFields).ToArray()));
             Sql.Append(")");
             return this;
+        }
+
+        public SqlInsertFactory<T> Values(EntityBase entity, params Expression<Func<T, object>>[] predicate)
+        {
+            var defaultFields = predicate.Select(EntityHelper.GetPropertyName).ToArray();
+            return Values(entity, defaultFields);
         }
 
         public SqlInsertFactory<T> Values(EntityBase entity, params string[] defaultFields)
@@ -61,6 +75,16 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
+        public SqlInsertFactory<T> ValueToReplace(Expression<Func<T, object>> predicate, string value)
+        {
+            return ValueToReplace(EntityHelper.GetPropertyName(predicate), value);
+        }
+
+        public SqlInsertFactory<T> ValueToReplace<TSub>(Expression<Func<T, object>> predicate, SqlFactoryBase<TSub> value) where TSub : EntityBase, new()
+        {
+            return ValueToReplace(EntityHelper.GetPropertyName(predicate), value);
+        }
+
         public SqlInsertFactory<T> ValueToReplace(string field, string value)
         {
             var usingField = _sqlUsingFields[field];
@@ -77,12 +101,9 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlInsertFactory<T> ValueToReplace(string field, SqlFactoryBase<T> value)
+        public SqlInsertFactory<T> ValueToReplace<TSub>(string field, SqlFactoryBase<TSub> value) where TSub : EntityBase, new()
         {
-            var usingField = _sqlUsingFields[field];
-            var fieldName = "@" + usingField.FieldName;
-
-            Sql = Sql.Replace(fieldName, "(" + value.ToSql() + ")");
+            ValueToReplace(field, "(" + value.ToSql() + ")");
 
             foreach (var parameter in
                 from parameter in value.Parameters
@@ -97,11 +118,7 @@ namespace AccidentallyORM.SqlFactory
 
         public int Go()
         {
-            if (Parameters.Count > 0)
-            {
-                return SqlHelper.ExecuteNonQuery(ToSql(), Parameters.ToArray());
-            }
-            return SqlHelper.ExecuteNonQuery(ToSql());
+            return Parameters.Count > 0 ? SqlHelper.ExecuteNonQuery(ToSql(), Parameters.ToArray()) : SqlHelper.ExecuteNonQuery(ToSql());
         }
     }
 }

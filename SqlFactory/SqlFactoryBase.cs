@@ -1,8 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq.Expressions;
 using System.Text;
 using AccidentallyORM.DBHelper;
 using AccidentallyORM.Entity;
+using AccidentallyORM.Entity.Attribute;
 
 namespace AccidentallyORM.SqlFactory
 {
@@ -10,18 +13,29 @@ namespace AccidentallyORM.SqlFactory
     {
         protected internal List<DbParameter> Parameters = new List<DbParameter>();
         protected StringBuilder Sql = new StringBuilder();
-        protected string SqlTableName;
-        protected SqlFieldFactory<T> SqlFieldFactory;
+
+        protected static string SqlTableName = EntityHelper.GetTableName<T>();
+        protected static Dictionary<string, DataFieldAttribute> SqlFields = EntityHelper.GetFieldAttributes<T>();
+        protected static Dictionary<Expression<Func<T, object>>, string> Properties = new Dictionary<Expression<Func<T, object>>, string>();
 
         public SqlFactoryBase()
         {
-            SqlTableName = EntityHelper.GetTableName<T>();
             SqlHelper = new DbService();
         }
 
         public SqlFieldFactory<T> Field(string fieldName)
         {
-            return SqlFieldFactory<T>.Field(fieldName);
+            var field = SqlFields[fieldName];
+            return field;
+        }
+
+        public SqlFieldFactory<T> Field(Expression<Func<T, object>> predicate)
+        {
+            if (!Properties.ContainsKey(predicate))
+            {
+                Properties.Add(predicate, EntityHelper.GetPropertyName(predicate));
+            }
+            return Field(Properties[predicate]);
         }
 
         public DbService SqlHelper { get; set; }

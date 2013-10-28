@@ -45,6 +45,7 @@
   <ItemGroup>
     <Compile Include="Common\ConfigHelper.cs" />
     <Compile Include="Entity\EntityHelper.cs" />
+    <Compile Include="Extensions\BooleanExtensions.cs" />
     <Compile Include="SqlFactory\SqlFieldFactory.cs" />
     <Compile Include="SqlFactory\SqlDeleteFactory.cs" />
     <Compile Include="SqlFactory\SqlFactoryBase.cs" />
@@ -57,8 +58,11 @@
     <Compile Include="Entity\Attribute\DataFieldAttribute.cs" />
     <Compile Include="Entity\Attribute\DataTableAttribute.cs" />
     <Compile Include="Entity\EntityBase.cs" />
-    <Compile Include="Extensions\Extensions.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Business\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

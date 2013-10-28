@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using AccidentallyORM.Entity.Attribute;
 using AccidentallyORM.Extensions;
@@ -13,7 +14,7 @@ namespace AccidentallyORM.Entity
         public static string GetTableName<T>()
         {
             var dataTableAttribute =
-                (DataTableAttribute) System.Attribute.GetCustomAttribute(typeof (T), typeof (DataTableAttribute));
+                (DataTableAttribute)System.Attribute.GetCustomAttribute(typeof(T), typeof(DataTableAttribute));
             var tableName = string.Empty;
             if (null != dataTableAttribute)
                 tableName = dataTableAttribute.TableName;
@@ -31,15 +32,15 @@ namespace AccidentallyORM.Entity
         {
             var fields = new Dictionary<string, DataFieldAttribute>();
             var dataTableAttribute =
-                (DataTableAttribute) System.Attribute.GetCustomAttribute(typeof (T), typeof (DataTableAttribute));
+                (DataTableAttribute)System.Attribute.GetCustomAttribute(typeof(T), typeof(DataTableAttribute));
             var fieldPrefix = string.Empty;
             if (null != dataTableAttribute)
                 fieldPrefix = dataTableAttribute.FieldPrefix;
 
-            foreach (var propertyInfo in typeof (T).GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            foreach (var propertyInfo in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public))
             {
                 var dataFieldAttribute =
-                    (DataFieldAttribute) System.Attribute.GetCustomAttribute(propertyInfo, typeof (DataFieldAttribute));
+                    (DataFieldAttribute)System.Attribute.GetCustomAttribute(propertyInfo, typeof(DataFieldAttribute));
 
                 string fieldName;
                 if (null == dataFieldAttribute || dataFieldAttribute.FieldName.Equals(string.Empty))
@@ -63,6 +64,24 @@ namespace AccidentallyORM.Entity
             }
 
             return fields;
+        }
+
+        public static string GetPropertyName<T>(Expression<Func<T, object>> predicate)
+        {
+            var fieldName = "";
+            if (predicate.Body is UnaryExpression)
+            {
+                fieldName = ((MemberExpression)((UnaryExpression)predicate.Body).Operand).Member.Name;
+            }
+            else if (predicate.Body is MemberExpression)
+            {
+                fieldName = ((MemberExpression)predicate.Body).Member.Name;
+            }
+            else if (predicate.Body is ParameterExpression)
+            {
+                fieldName = predicate.Body.Type.Name;
+            }
+            return fieldName;
         }
 
         //public static string GetSelectList<T>()
@@ -107,17 +126,17 @@ namespace AccidentallyORM.Entity
 
                     var dataTableAttribute =
                         (DataTableAttribute)
-                        System.Attribute.GetCustomAttribute(typeof (T), typeof (DataTableAttribute));
+                        System.Attribute.GetCustomAttribute(typeof(T), typeof(DataTableAttribute));
                     var fieldPrefix = string.Empty;
                     if (null != dataTableAttribute)
                         fieldPrefix = dataTableAttribute.FieldPrefix;
 
-                    foreach (var propertyInfo in typeof (T).GetProperties(BindingFlags.Instance | BindingFlags.Public))
+                    foreach (var propertyInfo in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public))
                     {
                         var dataFieldAttribute = (
                                                  DataFieldAttribute)
                                                  System.Attribute.GetCustomAttribute(propertyInfo,
-                                                                                     typeof (DataFieldAttribute));
+                                                                                     typeof(DataFieldAttribute));
 
                         object obj;
                         try

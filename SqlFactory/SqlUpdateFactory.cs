@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Linq.Expressions;
+using System.Text;
 using AccidentallyORM.DBHelper;
 using AccidentallyORM.Entity;
 
@@ -16,6 +18,16 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
+        public SqlUpdateFactory<T> Set(Expression<Func<T, object>> predicate, bool useDefault = false)
+        {
+            return Set(predicate, null, useDefault);
+        }
+
+        public SqlUpdateFactory<T> Set(Expression<Func<T, object>> predicate, object value, bool useDefault = false)
+        {
+            return Set(EntityHelper.GetPropertyName(predicate), value, useDefault);
+        }
+
         public SqlUpdateFactory<T> Set(string fieldName, bool useDefault = false)
         {
             return Set(fieldName, null, useDefault);
@@ -23,7 +35,7 @@ namespace AccidentallyORM.SqlFactory
 
         public SqlUpdateFactory<T> Set(string fieldName, object value, bool useDefault = false)
         {
-            var field = SqlFieldFactory<T>.SqlFields[fieldName];
+            var field = SqlFields[fieldName];
             var setString = field.FieldName;
 
             if (useDefault)
@@ -54,7 +66,7 @@ namespace AccidentallyORM.SqlFactory
         public SqlUpdateFactory<T> Where(SqlFieldFactory<T> sqlFieldFactory)
         {
             _sqlWhere.Append(" WHERE ");
-            _sqlWhere.Append(sqlFieldFactory);
+            _sqlWhere.Append(sqlFieldFactory.ToString());
 
             Parameters.AddRange(sqlFieldFactory.Parameters);
 

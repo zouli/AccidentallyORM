@@ -7,10 +7,10 @@ using AccidentallyORM.Entity.Attribute;
 
 namespace AccidentallyORM.SqlFactory
 {
+#pragma warning disable 660,661
     public class SqlFieldFactory<T> where T : EntityBase, new()
+#pragma warning restore 660,661
     {
-        public static Dictionary<string, DataFieldAttribute> SqlFields = EntityHelper.GetFieldAttributes<T>();
-
         private SqlFieldFactory()
         {
             if (null == Parameters)
@@ -20,7 +20,7 @@ namespace AccidentallyORM.SqlFactory
                 CompareString = new StringBuilder();
         }
 
-        private string LastField { get; set; }
+        private DataFieldAttribute LastField { get; set; }
 
         public List<DbParameter> Parameters { get; protected set; }
         public StringBuilder CompareString { get; protected set; }
@@ -28,16 +28,6 @@ namespace AccidentallyORM.SqlFactory
         public override string ToString()
         {
             return "(" + CompareString + ")";
-        }
-
-        public static SqlFieldFactory<T> Field(string fieldName)
-        {
-            var field = SqlFields[fieldName];
-            var operatorHelper = new SqlFieldFactory<T> { LastField = fieldName };
-
-            operatorHelper.CompareString.Append(field.FieldName);
-
-            return operatorHelper;
         }
 
         public SqlFieldFactory<T> IsNull()
@@ -64,12 +54,10 @@ namespace AccidentallyORM.SqlFactory
 
         private static SqlFieldFactory<T> BuildOperator(SqlFieldFactory<T> compare, object value, string operatorString)
         {
-            var field = SqlFields[compare.LastField];
-
-            string paraName = "@" + field.FieldName;
+            string paraName = "@" + compare.LastField.FieldName;
 
             compare.CompareString.Append(operatorString + paraName);
-            compare.Parameters.Add(DbService.CreateParameter(paraName, field.ColumnType, value));
+            compare.Parameters.Add(DbService.CreateParameter(paraName, compare.LastField.ColumnType, value));
 
             return compare;
         }
@@ -136,6 +124,39 @@ namespace AccidentallyORM.SqlFactory
         public static SqlFieldFactory<T> operator >=(SqlFieldFactory<T> compare, object value)
         {
             return BuildOperator(compare, value, " >= ");
+        }
+
+        public static SqlFieldFactory<T> operator +(SqlFieldFactory<T> compare, object value)
+        {
+            return BuildOperator(compare, value, " + ");
+        }
+
+        public static SqlFieldFactory<T> operator -(SqlFieldFactory<T> compare, object value)
+        {
+            return BuildOperator(compare, value, " - ");
+        }
+
+        public static SqlFieldFactory<T> operator *(SqlFieldFactory<T> compare, object value)
+        {
+            return BuildOperator(compare, value, " * ");
+        }
+
+        public static SqlFieldFactory<T> operator /(SqlFieldFactory<T> compare, object value)
+        {
+            return BuildOperator(compare, value, " / ");
+        }
+
+        public static implicit operator SqlFieldFactory<T>(DataFieldAttribute field)
+        {
+            var operatorHelper = new SqlFieldFactory<T> { LastField = field };
+
+            operatorHelper.CompareString.Append(field.FieldName);
+            return operatorHelper;
+        }
+
+        public static implicit operator string(SqlFieldFactory<T> field)
+        {
+            return field.LastField.FieldName;
         }
     }
 }
