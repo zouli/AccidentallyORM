@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq.Expressions;
 using System.Text;
 using AccidentallyORM.DBHelper;
@@ -11,7 +10,7 @@ namespace AccidentallyORM.SqlFactory
 {
     public class SqlFactoryBase<T> where T : EntityBase, new()
     {
-        protected internal List<DbParameter> Parameters = new List<DbParameter>();
+        protected internal SqlParameter Parameters = new SqlParameter();
         protected StringBuilder Sql = new StringBuilder();
 
         protected static string SqlTableName = EntityHelper.GetTableName<T>();

@@ -52,6 +52,7 @@
     <Compile Include="DBHelper\DbService.cs" />
     <Compile Include="DBHelper\SqlHelperDbProviderFactories.cs" />
     <Compile Include="SqlFactory\SqlInsertFactory.cs" />
+    <Compile Include="SqlFactory\SqlParameter.cs" />
     <Compile Include="SqlFactory\SqlQueryFactory.cs" />
     <Compile Include="SqlFactory\SqlUpdateFactory.cs" />
     <Compile Include="Entity\TypeHelper.cs" />

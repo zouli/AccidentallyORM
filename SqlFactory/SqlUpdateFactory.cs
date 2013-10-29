@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Text;
-using AccidentallyORM.DBHelper;
 using AccidentallyORM.Entity;
 
 namespace AccidentallyORM.SqlFactory
@@ -50,9 +49,9 @@ namespace AccidentallyORM.SqlFactory
                 }
                 else
                 {
-                    var paraName = "@" + field.FieldName;
+                    var paraName = SqlParameter.GetParameterName(field.FieldName);
                     setString += " = " + paraName;
-                    Parameters.Add(DbService.CreateParameter(paraName, field.ColumnType, value));
+                    Parameters.Add(paraName, field.ColumnType, value);
                 }
             }
 

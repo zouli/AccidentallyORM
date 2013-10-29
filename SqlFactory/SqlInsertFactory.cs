@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using AccidentallyORM.DBHelper;
 using AccidentallyORM.Entity;
 using AccidentallyORM.Entity.Attribute;
 
@@ -11,6 +10,13 @@ namespace AccidentallyORM.SqlFactory
     public class SqlInsertFactory<T> : SqlFactoryBase<T> where T : EntityBase, new()
     {
         private Dictionary<string, DataFieldAttribute> _sqlUsingFields = new Dictionary<string, DataFieldAttribute>();
+
+        private ValueSet<T> _value;
+        public ValueSet<T> Value
+        {
+            get { return _value ?? (_value = new ValueSet<T>()); }
+            private set { _value = value; }
+        }
 
         public SqlInsertFactory<T> Insert()
         {
@@ -21,13 +27,14 @@ namespace AccidentallyORM.SqlFactory
 
         public SqlInsertFactory<T> Fields()
         {
-            return Fields(new string[] { });
+            Fields(new string[] { });
+            return this;
         }
 
-        public SqlInsertFactory<T> Fields(params Expression<Func<T, object>>[] predicate)
+        public SqlInsertFactory<T> Fields(params Expression<Func<T, object>>[] usingFields)
         {
-            var usingFields = predicate.Select(EntityHelper.GetPropertyName).ToArray();
-            return Fields(usingFields);
+            var usingField = usingFields.Select(EntityHelper.GetPropertyName).ToArray();
+            return Fields(usingField);
         }
 
         public SqlInsertFactory<T> Fields(params string[] usingFields)
@@ -50,18 +57,63 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlInsertFactory<T> Values(EntityBase entity)
+        public SqlInsertFactory<T> Values(T entity)
         {
             return Values(entity, new string[] { });
         }
 
-        public SqlInsertFactory<T> Values(EntityBase entity, params Expression<Func<T, object>>[] predicate)
+        public SqlInsertFactory<T> Values(T entity, params KeyValuePair<Expression<Func<T, object>>, object>[] setFields)
         {
-            var defaultFields = predicate.Select(EntityHelper.GetPropertyName).ToArray();
-            return Values(entity, defaultFields);
+            var defaultField = new Dictionary<string, object>();
+            foreach (var keyValuePair in setFields)
+            {
+                var fieldName = EntityHelper.GetPropertyName(keyValuePair.Key);
+                var fieldValue = keyValuePair.Value;
+
+                if (fieldValue is SqlFactoryBase<T>)
+                {
+                    var sqlFactoryBase = fieldValue as SqlFactoryBase<T>;
+                    defaultField.Add(fieldName, "(" + sqlFactoryBase.ToSql() + ")");
+                    Parameters.AddRange(sqlFactoryBase.Parameters);
+                }
+                else
+                {
+                    defaultField.Add(fieldName, fieldValue);
+                }
+
+            }
+            Values(entity, defaultField);
+
+            return this;
         }
 
-        public SqlInsertFactory<T> Values(EntityBase entity, params string[] defaultFields)
+        private void Values(T entity, Dictionary<string, object> setFields)
+        {
+            Sql.Append(" VALUES (");
+            foreach (var field in _sqlUsingFields)
+            {
+                if (setFields.ContainsKey(field.Key))
+                {
+                    Sql.Append(setFields[field.Key] + ",");
+                }
+                else
+                {
+                    var paraName = SqlParameter.GetParameterName(field.Value.FieldName);
+                    Sql.Append(paraName + ",");
+                    Parameters.Add(paraName, field.Value.ColumnType, entity.GetValue(field.Key));
+                }
+            }
+            Sql.Remove(Sql.Length - 1, 1);
+            Sql.Append(")");
+        }
+
+        public SqlInsertFactory<T> Values(T entity, params Expression<Func<T, object>>[] defaultFields)
+        {
+            string[] defaultField = defaultFields.Select(EntityHelper.GetPropertyName).ToArray();
+            return Values(entity, defaultField);
+        }
+
+        public SqlInsertFactory<T> Values(T entity, params string[] defaultFields)
         {
             var defaultFieldsList = new List<string>(defaultFields);
 
@@ -74,10 +126,9 @@ namespace AccidentallyORM.SqlFactory
                 }
                 else
                 {
-                    string paraName = "@" + field.Value.FieldName;
+                    var paraName = SqlParameter.GetParameterName(field.Value.FieldName);
                     Sql.Append(paraName + ",");
-                    Parameters.Add(
-                        DbService.CreateParameter(paraName, field.Value.ColumnType, entity.GetValue(field.Key)));
+                    Parameters.Add(paraName, field.Value.ColumnType, entity.GetValue(field.Key));
                 }
             }
             Sql.Remove(Sql.Length - 1, 1);
@@ -85,50 +136,20 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlInsertFactory<T> ValueToReplace(Expression<Func<T, object>> predicate, string value)
-        {
-            return ValueToReplace(EntityHelper.GetPropertyName(predicate), value);
-        }
-
-        public SqlInsertFactory<T> ValueToReplace<TSub>(Expression<Func<T, object>> predicate, SqlFactoryBase<TSub> value) where TSub : EntityBase, new()
-        {
-            return ValueToReplace(EntityHelper.GetPropertyName(predicate), value);
-        }
-
-        public SqlInsertFactory<T> ValueToReplace(string field, string value)
-        {
-            var usingField = _sqlUsingFields[field];
-            var fieldName = "@" + usingField.FieldName;
-
-            Sql = Sql.Replace(fieldName, value);
-
-            foreach (var parameter in Parameters.Where(parameter => parameter.ParameterName.Equals(fieldName)))
-            {
-                Parameters.Remove(parameter);
-                break;
-            }
-
-            return this;
-        }
-
-        public SqlInsertFactory<T> ValueToReplace<TSub>(string field, SqlFactoryBase<TSub> value) where TSub : EntityBase, new()
-        {
-            ValueToReplace(field, "(" + value.ToSql() + ")");
-
-            foreach (var parameter in
-                from parameter in value.Parameters
-                let addFlag = Parameters.All(dbParameter => !dbParameter.ParameterName.Equals(parameter.ParameterName))
-                where addFlag
-                select parameter)
-            {
-                Parameters.Add(parameter);
-            }
-            return this;
-        }
-
         public int Go()
         {
-            return Parameters.Count > 0 ? SqlHelper.ExecuteNonQuery(ToSql(), Parameters.ToArray()) : SqlHelper.ExecuteNonQuery(ToSql());
+            return Parameters.Count > 0
+                ? SqlHelper.ExecuteNonQuery(ToSql(), Parameters.ToArray())
+                : SqlHelper.ExecuteNonQuery(ToSql());
         }
+
+        public class ValueSet<TS>
+        {
+            public KeyValuePair<Expression<Func<TS, object>>, object> Set(Expression<Func<TS, object>> key, object value)
+            {
+                return new KeyValuePair<Expression<Func<TS, object>>, object>(key, value);
+            }
+        }
+
     }
 }
