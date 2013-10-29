@@ -19,6 +19,11 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
+        public SqlInsertFactory<T> Fields()
+        {
+            return Fields(new string[] { });
+        }
+
         public SqlInsertFactory<T> Fields(params Expression<Func<T, object>>[] predicate)
         {
             var usingFields = predicate.Select(EntityHelper.GetPropertyName).ToArray();
@@ -43,6 +48,11 @@ namespace AccidentallyORM.SqlFactory
             Sql.Append(string.Join(",", EntityHelper.GetFieldNames(_sqlUsingFields).ToArray()));
             Sql.Append(")");
             return this;
+        }
+
+        public SqlInsertFactory<T> Values(EntityBase entity)
+        {
+            return Values(entity, new string[] { });
         }
 
         public SqlInsertFactory<T> Values(EntityBase entity, params Expression<Func<T, object>>[] predicate)

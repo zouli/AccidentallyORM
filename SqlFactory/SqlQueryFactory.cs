@@ -35,6 +35,11 @@ namespace AccidentallyORM.SqlFactory
             return Select(-1, new string[] { });
         }
 
+        public SqlQueryFactory<T> Select(int top)
+        {
+            return Select(top, new string[] { });
+        }
+
         public SqlQueryFactory<T> Select(params Expression<Func<T, object>>[] predicate)
         {
             return Select(-1, predicate);
@@ -48,7 +53,7 @@ namespace AccidentallyORM.SqlFactory
 
         public SqlQueryFactory<T> Select(params string[] fieldNames)
         {
-            return Select(-1, fieldNames); ;
+            return Select(-1, fieldNames);
         }
 
         public SqlQueryFactory<T> Select(int top, params string[] fieldNames)
