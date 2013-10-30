@@ -66,9 +66,16 @@ namespace AccidentallyORM.Entity
             return fields;
         }
 
+        private static readonly Dictionary<string, string> properties = new Dictionary<string, string>();
         public static string GetPropertyName<T>(Expression<Func<T, object>> predicate)
         {
             var fieldName = "";
+
+            if (properties.ContainsKey(predicate.ToString()))
+            {
+                return properties[predicate.ToString()];
+            }
+
             if (predicate.Body is UnaryExpression)
             {
                 fieldName = ((MemberExpression)((UnaryExpression)predicate.Body).Operand).Member.Name;
@@ -81,6 +88,9 @@ namespace AccidentallyORM.Entity
             {
                 fieldName = predicate.Body.Type.Name;
             }
+
+            properties.Add(predicate.ToString(), fieldName);
+
             return fieldName;
         }
 

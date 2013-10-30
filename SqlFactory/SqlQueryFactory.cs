@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using AccidentallyORM.Entity;
+using AccidentallyORM.SqlFieldFactory;
 
 namespace AccidentallyORM.SqlFactory
 {
-    public class SqlQueryFactory<T> : SqlFactoryBase<T> where T : EntityBase, new()
+    public partial class SqlQueryFactory<T> : SqlFactoryBase<T> where T : EntityBase, new()
     {
         private readonly StringBuilder _sqlGroupBy = new StringBuilder();
         private readonly StringBuilder _sqlOrderBy = new StringBuilder();
@@ -19,74 +19,12 @@ namespace AccidentallyORM.SqlFactory
             Sql.Append(SqlTableName);
         }
 
-        public SqlQueryFactory<T> SelectByOriginal(string select)
-        {
-            Sql = new StringBuilder();
-            Sql.Append("SELECT ");
-            Sql.Append(select);
-
-            From();
-
-            return this;
-        }
-
-        public SqlQueryFactory<T> Select()
-        {
-            return Select(-1, new string[] { });
-        }
-
-        public SqlQueryFactory<T> Select(int top)
-        {
-            return Select(top, new string[] { });
-        }
-
-        public SqlQueryFactory<T> Select(params Expression<Func<T, object>>[] predicate)
-        {
-            return Select(-1, predicate);
-        }
-
-        public SqlQueryFactory<T> Select(int top, params Expression<Func<T, object>>[] predicate)
-        {
-            var fieldNames = predicate.Select(EntityHelper.GetPropertyName).ToArray();
-            return Select(top, fieldNames);
-        }
-
-        public SqlQueryFactory<T> Select(params string[] fieldNames)
-        {
-            return Select(-1, fieldNames);
-        }
-
-        public SqlQueryFactory<T> Select(int top, params string[] fieldNames)
-        {
-            var sql = new StringBuilder();
-
-            if (top > 0)
-            {
-                sql.Append("TOP ");
-                sql.Append(top);
-                sql.Append(" ");
-            }
-
-            string[] fields;
-            if (fieldNames != null && fieldNames.Length > 0)
-            {
-                fields = fieldNames.Select(fieldName => SqlFields[fieldName].FieldName).ToArray();
-            }
-            else
-            {
-                fields = EntityHelper.GetFieldNames(SqlFields).ToArray();
-            }
-            sql.Append(string.Join(",", fields));
-
-            return SelectByOriginal(sql.ToString());
-        }
-
-        public SqlQueryFactory<T> Where(SqlFieldFactory<T> sqlFieldFactory)
+        public SqlQueryFactory<T> Where(SqlField<T> sqlField)
         {
             _sqlWhere.Append(" WHERE ");
-            _sqlWhere.Append(sqlFieldFactory.ToString());
+            _sqlWhere.Append(sqlField.ToString());
 
-            Parameters.AddRange(sqlFieldFactory.Parameters);
+            Parameters.AddRange(sqlField.Parameters);
 
             return this;
         }
@@ -121,6 +59,18 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
+        public SqlQueryFactory<T> Having(string sqlHaving)
+        {
+            _sqlGroupBy.Append(" HAVING ");
+            _sqlGroupBy.Append(sqlHaving);
+            return this;
+        }
+
+        public SqlQueryFactory<T> Having(SqlField<T> sqlHaving)
+        {
+            return Having(sqlHaving.ToString());
+        }
+
         public List<T> Go()
         {
             if (Parameters.Count > 0)
@@ -132,6 +82,8 @@ namespace AccidentallyORM.SqlFactory
 
         public override string ToSql()
         {
+            From();
+
             if (_sqlWhere.Length > 0) Sql.Append(_sqlWhere);
             if (_sqlGroupBy.Length > 0) Sql.Append(_sqlGroupBy);
             if (_sqlOrderBy.Length > 0) Sql.Append(_sqlOrderBy);

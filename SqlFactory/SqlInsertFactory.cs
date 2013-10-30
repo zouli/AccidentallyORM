@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using AccidentallyORM.Entity;
 using AccidentallyORM.Entity.Attribute;
+using AccidentallyORM.SqlFieldFactory;
 
 namespace AccidentallyORM.SqlFactory
 {
@@ -15,7 +16,6 @@ namespace AccidentallyORM.SqlFactory
         public ValueSet<T> Value
         {
             get { return _value ?? (_value = new ValueSet<T>()); }
-            private set { _value = value; }
         }
 
         public SqlInsertFactory<T> Insert()

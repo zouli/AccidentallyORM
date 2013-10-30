@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.Common;
 using AccidentallyORM.DBHelper;
 
-namespace AccidentallyORM.SqlFactory
+namespace AccidentallyORM.SqlFieldFactory
 {
     public class SqlParameter : List<DbParameter>
     {

@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 using System.Text;
 using AccidentallyORM.Entity;
+using AccidentallyORM.SqlFieldFactory;
 
 namespace AccidentallyORM.SqlFactory
 {
@@ -62,12 +63,12 @@ namespace AccidentallyORM.SqlFactory
         }
 
 
-        public SqlUpdateFactory<T> Where(SqlFieldFactory<T> sqlFieldFactory)
+        public SqlUpdateFactory<T> Where(SqlField<T> sqlField)
         {
             _sqlWhere.Append(" WHERE ");
-            _sqlWhere.Append(sqlFieldFactory.ToString());
+            _sqlWhere.Append(sqlField.ToString());
 
-            Parameters.AddRange(sqlFieldFactory.Parameters);
+            Parameters.AddRange(sqlField.Parameters);
 
             return this;
         }

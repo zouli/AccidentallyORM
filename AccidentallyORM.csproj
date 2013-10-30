@@ -46,13 +46,15 @@
     <Compile Include="Common\ConfigHelper.cs" />
     <Compile Include="Entity\EntityHelper.cs" />
     <Compile Include="Extensions\BooleanExtensions.cs" />
-    <Compile Include="SqlFactory\SqlFieldFactory.cs" />
+    <Compile Include="SqlFactory\SqlQuerySelectFactory.cs" />
+    <Compile Include="SqlFieldFactory\SqlField.cs" />
     <Compile Include="SqlFactory\SqlDeleteFactory.cs" />
     <Compile Include="SqlFactory\SqlFactoryBase.cs" />
     <Compile Include="DBHelper\DbService.cs" />
     <Compile Include="DBHelper\SqlHelperDbProviderFactories.cs" />
     <Compile Include="SqlFactory\SqlInsertFactory.cs" />
-    <Compile Include="SqlFactory\SqlParameter.cs" />
+    <Compile Include="SqlFieldFactory\SqlFieldFunction.cs" />
+    <Compile Include="SqlFieldFactory\SqlParameter.cs" />
     <Compile Include="SqlFactory\SqlQueryFactory.cs" />
     <Compile Include="SqlFactory\SqlUpdateFactory.cs" />
     <Compile Include="Entity\TypeHelper.cs" />

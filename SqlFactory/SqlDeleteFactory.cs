@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using AccidentallyORM.Entity;
+using AccidentallyORM.SqlFieldFactory;
 
 namespace AccidentallyORM.SqlFactory
 {
@@ -22,12 +23,12 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlDeleteFactory<T> Where(SqlFieldFactory<T> sqlFieldFactory)
+        public SqlDeleteFactory<T> Where(SqlField<T> sqlField)
         {
             _sqlWhere.Append(" WHERE ");
-            _sqlWhere.Append(sqlFieldFactory.ToString());
+            _sqlWhere.Append(sqlField.ToString());
 
-            Parameters.AddRange(sqlFieldFactory.Parameters);
+            Parameters.AddRange(sqlField.Parameters);
 
             return this;
         }

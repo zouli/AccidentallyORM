@@ -1,12 +1,13 @@
 ﻿using System.Text;
 using AccidentallyORM.Entity;
 using AccidentallyORM.Entity.Attribute;
+using AccidentallyORM.SqlFactory;
 
-namespace AccidentallyORM.SqlFactory
+namespace AccidentallyORM.SqlFieldFactory
 {
-    public class SqlFieldFactory<T> where T : EntityBase, new()
+    public partial class SqlField<T> where T : EntityBase, new()
     {
-        private SqlFieldFactory()
+        internal SqlField()
         {
             if (null == Parameters)
                 Parameters = new SqlParameter();
@@ -25,19 +26,19 @@ namespace AccidentallyORM.SqlFactory
             return "(" + CompareString + ")";
         }
 
-        public SqlFieldFactory<T> IsNull()
+        private SqlField<T> IsNull()
         {
             CompareString.Append(" IS NULL");
             return this;
         }
 
-        public SqlFieldFactory<T> IsNotNull()
+        private SqlField<T> IsNotNull()
         {
             CompareString.Append(" IS NOT NULL");
             return this;
         }
 
-        public SqlFieldFactory<T> In(string inString)
+        public SqlField<T> In(string inString)
         {
             CompareString.Append(" IN (");
             CompareString.Append(inString);
@@ -46,7 +47,7 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlFieldFactory<T> In<TSub>(SqlQueryFactory<TSub> subQuery) where TSub : EntityBase, new()
+        public SqlField<T> In<TSub>(SqlQueryFactory<TSub> subQuery) where TSub : EntityBase, new()
         {
             In(subQuery.ToSql());
 
@@ -54,7 +55,7 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlFieldFactory<T> Like(string likeString)
+        public SqlField<T> Like(string likeString)
         {
             CompareString.Append(" LIKE (");
             CompareString.Append(likeString);
@@ -63,7 +64,7 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlFieldFactory<T> Like<TSub>(SqlQueryFactory<TSub> subQuery) where TSub : EntityBase, new()
+        public SqlField<T> Like<TSub>(SqlQueryFactory<TSub> subQuery) where TSub : EntityBase, new()
         {
             Like(subQuery.ToSql());
 
@@ -71,109 +72,115 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        private static SqlFieldFactory<T> BuildOperator(SqlFieldFactory<T> compare, object value, string operatorString)
+        private static SqlField<T> BuildOperator(SqlField<T> compare, object value, string operatorString)
         {
-            var paraName = SqlParameter.GetParameterName(compare.LastField.FieldName);
+            if (null == compare.LastField)
+            {
+                compare.CompareString.Append(operatorString + value);
+            }
+            else
+            {
+                var paraName = SqlParameter.GetParameterName(compare.LastField.FieldName);
 
-            compare.CompareString.Append(operatorString + paraName);
-            compare.Parameters.Add(paraName, compare.LastField.ColumnType, value);
-
+                compare.CompareString.Append(operatorString + paraName);
+                compare.Parameters.Add(paraName, compare.LastField.ColumnType, value);
+            }
             return compare;
         }
 
-        private static SqlFieldFactory<T> BuildLogicOperator(SqlFieldFactory<T> compare, object value,
+        private static SqlField<T> BuildLogicOperator(SqlField<T> compare, object value,
                                                             string operatorString)
         {
-            var newCompare = new SqlFieldFactory<T>();
+            var newCompare = new SqlField<T>();
 
             newCompare.Parameters.AddRange(compare.Parameters);
             newCompare.CompareString.Append(compare.ToString());
             newCompare.CompareString.Append(operatorString);
 
-            if (value is SqlFieldFactory<T>)
-                newCompare.Parameters.AddRange(((SqlFieldFactory<T>)value).Parameters);
+            if (value is SqlField<T>)
+                newCompare.Parameters.AddRange(((SqlField<T>)value).Parameters);
 
             newCompare.CompareString.Append(value);
 
             return newCompare;
         }
 
-        public static SqlFieldFactory<T> operator &(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator &(SqlField<T> compare, object value)
         {
             return BuildLogicOperator(compare, value, " AND ");
         }
 
-        public static SqlFieldFactory<T> operator |(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator |(SqlField<T> compare, object value)
         {
             return BuildLogicOperator(compare, value, " OR ");
         }
 
-        public static SqlFieldFactory<T> operator !(SqlFieldFactory<T> compare)
+        public static SqlField<T> operator !(SqlField<T> compare)
         {
             compare.CompareString.Insert(0, "NOT(");
             compare.CompareString.Append(")");
             return compare;
         }
 
-        public static SqlFieldFactory<T> operator ==(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator ==(SqlField<T> compare, object value)
         {
-            return BuildOperator(compare, value, " = ");
+            return value == null ? compare.IsNull() : BuildOperator(compare, value, " = ");
         }
 
-        public static SqlFieldFactory<T> operator !=(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator !=(SqlField<T> compare, object value)
         {
-            return BuildOperator(compare, value, " <> ");
+            return value == null ? compare.IsNotNull() : BuildOperator(compare, value, " <> ");
         }
 
-        public static SqlFieldFactory<T> operator <(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator <(SqlField<T> compare, object value)
         {
             return BuildOperator(compare, value, " < ");
         }
 
-        public static SqlFieldFactory<T> operator >(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator >(SqlField<T> compare, object value)
         {
             return BuildOperator(compare, value, " > ");
         }
 
-        public static SqlFieldFactory<T> operator <=(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator <=(SqlField<T> compare, object value)
         {
             return BuildOperator(compare, value, " <= ");
         }
 
-        public static SqlFieldFactory<T> operator >=(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator >=(SqlField<T> compare, object value)
         {
             return BuildOperator(compare, value, " >= ");
         }
 
-        public static SqlFieldFactory<T> operator +(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator +(SqlField<T> compare, object value)
         {
             return BuildOperator(compare, value, " + ");
         }
 
-        public static SqlFieldFactory<T> operator -(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator -(SqlField<T> compare, object value)
         {
             return BuildOperator(compare, value, " - ");
         }
 
-        public static SqlFieldFactory<T> operator *(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator *(SqlField<T> compare, object value)
         {
             return BuildOperator(compare, value, " * ");
         }
 
-        public static SqlFieldFactory<T> operator /(SqlFieldFactory<T> compare, object value)
+        public static SqlField<T> operator /(SqlField<T> compare, object value)
         {
             return BuildOperator(compare, value, " / ");
         }
 
-        public static implicit operator SqlFieldFactory<T>(DataFieldAttribute field)
+        public static implicit operator SqlField<T>(DataFieldAttribute field)
         {
-            var operatorHelper = new SqlFieldFactory<T> { LastField = field };
+            var operatorHelper = new SqlField<T> { LastField = field };
 
             operatorHelper.CompareString.Append(field.FieldName);
             return operatorHelper;
         }
 
-        public static implicit operator string(SqlFieldFactory<T> field)
+        public static implicit operator string(SqlField<T> field)
         {
             return field.LastField.FieldName;
         }
