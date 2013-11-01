@@ -76,7 +76,9 @@ namespace AccidentallyORM.SqlFactory
             string[] fields;
             if (fieldNames != null && fieldNames.Length > 0)
             {
-                fields = fieldNames.Select(fieldName => SqlFields[fieldName].FieldName).ToArray();
+                fields = fieldNames.Select(
+                        fieldName => SqlFields.ContainsKey(fieldName) ? SqlFields[fieldName].FieldName : fieldName
+                    ).ToArray();
             }
             else
             {

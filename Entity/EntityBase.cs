@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Text;
 using AccidentallyORM.Entity.Attribute;
 using AccidentallyORM.Extensions;
@@ -17,6 +18,15 @@ namespace AccidentallyORM.Entity
                 fields.Append(propertyInfo.Name + "=" + value + ";");
             }
             return fields.ToString();
+        }
+
+        public void Clone(EntityBase entityBase)
+        {
+            foreach (var entityBaseProperty in entityBase.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
+            {
+                var thisPropertity = GetType().GetProperty(entityBaseProperty.Name);
+                thisPropertity.SetValue(this, entityBaseProperty.GetValue(entityBase, null), null);
+            }
         }
 
         public object GetValue(string propertyName)

@@ -63,7 +63,7 @@ namespace AccidentallyORM.SqlFactory
         }
 
 
-        public SqlUpdateFactory<T> Where(SqlField<T> sqlField)
+        public SqlUpdateFactory<T> Where<TSub>(SqlField<TSub> sqlField) where TSub : EntityBase, new()
         {
             _sqlWhere.Append(" WHERE ");
             _sqlWhere.Append(sqlField.ToString());

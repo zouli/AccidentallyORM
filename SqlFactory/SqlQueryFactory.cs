@@ -19,7 +19,7 @@ namespace AccidentallyORM.SqlFactory
             Sql.Append(SqlTableName);
         }
 
-        public SqlQueryFactory<T> Where(SqlField<T> sqlField)
+        public SqlQueryFactory<T> Where<TSub>(SqlField<TSub> sqlField) where TSub : EntityBase, new()
         {
             _sqlWhere.Append(" WHERE ");
             _sqlWhere.Append(sqlField.ToString());

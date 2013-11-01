@@ -23,7 +23,7 @@ namespace AccidentallyORM.SqlFactory
             return this;
         }
 
-        public SqlDeleteFactory<T> Where(SqlField<T> sqlField)
+        public SqlDeleteFactory<T> Where<TSub>(SqlField<TSub> sqlField) where TSub : EntityBase, new()
         {
             _sqlWhere.Append(" WHERE ");
             _sqlWhere.Append(sqlField.ToString());
