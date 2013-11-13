@@ -10,17 +10,25 @@ namespace AccidentallyORM.SqlFactory
     {
         private readonly StringBuilder _sqlSet = new StringBuilder();
         private readonly StringBuilder _sqlWhere = new StringBuilder();
+        private T _entity;
 
-        public SqlUpdateFactory<T> Update()
+        private SqlUpdateFactory<T> Update()
         {
             Sql.Append("UPDATE ");
             Sql.Append(SqlTableName);
             return this;
         }
 
+        public SqlUpdateFactory<T> Update(T entity)
+        {
+            _entity = entity;
+            return Update();
+        }
+
         public SqlUpdateFactory<T> Set(Expression<Func<T, object>> predicate, bool useDefault = false)
         {
-            return Set(predicate, null, useDefault);
+            var propertyName = EntityHelper.GetPropertyName(predicate);
+            return Set(propertyName, _entity.GetValue(propertyName), useDefault);
         }
 
         public SqlUpdateFactory<T> Set(Expression<Func<T, object>> predicate, object value, bool useDefault = false)
@@ -30,7 +38,7 @@ namespace AccidentallyORM.SqlFactory
 
         public SqlUpdateFactory<T> Set(string fieldName, bool useDefault = false)
         {
-            return Set(fieldName, null, useDefault);
+            return Set(fieldName, _entity.GetValue(fieldName), useDefault);
         }
 
         public SqlUpdateFactory<T> Set(string fieldName, object value, bool useDefault = false)
