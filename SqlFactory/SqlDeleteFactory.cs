@@ -4,7 +4,7 @@ using AccidentallyORM.SqlFieldFactory;
 
 namespace AccidentallyORM.SqlFactory
 {
-    internal class SqlDeleteFactory<T> : SqlFactoryBase<T> where T : EntityBase, new()
+    public class SqlDeleteFactory<T> : SqlFactoryBase<T> where T : EntityBase, new()
     {
         private readonly StringBuilder _sqlWhere = new StringBuilder();
 
@@ -31,6 +31,22 @@ namespace AccidentallyORM.SqlFactory
             Parameters.AddRange(sqlField.Parameters);
 
             return this;
+        }
+
+        public int Go()
+        {
+            if (Parameters.Count > 0)
+            {
+                return SqlHelper.ExecuteNonQuery(ToSql(), Parameters.ToArray());
+            }
+            return SqlHelper.ExecuteNonQuery(ToSql());
+        }
+
+        public override string ToSql()
+        {
+            if (_sqlWhere.Length > 0) Sql.Append(_sqlWhere);
+
+            return Sql.ToString();
         }
     }
 }
