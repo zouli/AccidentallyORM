@@ -8,7 +8,7 @@ namespace AccidentallyORM.Extensions
     {
         public static string ToPinYin(this string source)
         {
-            if (source.Length != 0)
+            if (!string.IsNullOrEmpty(source))
             {
                 var fullSpellBuild = new StringBuilder();
                 foreach (var _char in source)
