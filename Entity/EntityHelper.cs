@@ -30,6 +30,11 @@ namespace AccidentallyORM.Entity
 
         public static Dictionary<string, DataFieldAttribute> GetFieldAttributes<T>()
         {
+            return GetFieldAttributes<T>("");
+        }
+
+        public static Dictionary<string, DataFieldAttribute> GetFieldAttributes<T>(string tableName)
+        {
             var fields = new Dictionary<string, DataFieldAttribute>();
             var dataTableAttribute =
                 (DataTableAttribute)System.Attribute.GetCustomAttribute(typeof(T), typeof(DataTableAttribute));
@@ -53,7 +58,10 @@ namespace AccidentallyORM.Entity
                 }
 
                 if (null == dataFieldAttribute) dataFieldAttribute = new DataFieldAttribute();
-                dataFieldAttribute.FieldName = fieldPrefix + fieldName;
+
+                dataFieldAttribute.FieldName = string.IsNullOrEmpty(tableName)
+                                                   ? fieldPrefix + fieldName
+                                                   : tableName + "." + fieldPrefix + fieldName;
 
                 if (dataFieldAttribute.ColumnType == DbType.Object)
                 {
@@ -160,7 +168,16 @@ namespace AccidentallyORM.Entity
                             {
                                 fieldName = dataFieldAttribute.FieldName;
                             }
-                            obj = reader[fieldPrefix + fieldName];
+
+                            if (null == dataFieldAttribute || dataFieldAttribute.UsePrefix)
+                            {
+                                obj = reader[fieldPrefix + fieldName];
+                            }
+                            else
+                            {
+                                obj = reader[fieldName];
+                            }
+                            
                         }
                         catch (Exception)
                         {

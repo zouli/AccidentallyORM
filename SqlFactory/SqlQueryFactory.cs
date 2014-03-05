@@ -9,14 +9,16 @@ namespace AccidentallyORM.SqlFactory
 {
     public partial class SqlQueryFactory<T> : SqlFactoryBase<T> where T : EntityBase, new()
     {
+        private readonly StringBuilder _sqlFields = new StringBuilder();
         private readonly StringBuilder _sqlGroupBy = new StringBuilder();
         private readonly StringBuilder _sqlOrderBy = new StringBuilder();
+        private readonly StringBuilder _sqlJoin = new StringBuilder();
         private readonly StringBuilder _sqlWhere = new StringBuilder();
 
         private void From()
         {
             Sql.Append(" FROM ");
-            Sql.Append(SqlTableName);
+            Sql.Append(TableName);
         }
 
         public SqlQueryFactory<T> Where<TSub>(SqlField<TSub> sqlField) where TSub : EntityBase, new()
@@ -71,6 +73,21 @@ namespace AccidentallyORM.SqlFactory
             return Having(sqlHaving.ToString());
         }
 
+        public List<T> Raw(string sql)
+        {
+            return Raw(sql, new SqlParameter());
+        }
+
+        public List<T> Raw(string sql, SqlParameter parameters)
+        {
+            Parameters = parameters;
+            if (Parameters.Count > 0)
+            {
+                return SqlHelper.ExecuteReader<T>(sql, Parameters.ToArray());
+            }
+            return SqlHelper.ExecuteReader<T>(sql);
+        }
+
         public List<T> Go()
         {
             if (Parameters.Count > 0)
@@ -82,8 +99,14 @@ namespace AccidentallyORM.SqlFactory
 
         public override string ToSql()
         {
+            Sql.Append(_sqlFields);
             From();
 
+            if (_sqlJoin.Length > 0)
+            {
+                Sql.Append(_sqlJoin);
+                Sql.Append(_sqlJoinOn);
+            }
             if (_sqlWhere.Length > 0) Sql.Append(_sqlWhere);
             if (_sqlGroupBy.Length > 0) Sql.Append(_sqlGroupBy);
             if (_sqlOrderBy.Length > 0) Sql.Append(_sqlOrderBy);

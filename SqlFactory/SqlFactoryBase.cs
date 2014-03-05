@@ -14,8 +14,17 @@ namespace AccidentallyORM.SqlFactory
         protected internal SqlParameter Parameters = new SqlParameter();
         protected StringBuilder Sql = new StringBuilder();
 
-        protected static string SqlTableName = EntityHelper.GetTableName<T>();
-        protected static Dictionary<string, DataFieldAttribute> SqlFields = EntityHelper.GetFieldAttributes<T>();
+        protected static string _sqlTableName = EntityHelper.GetTableName<T>();
+        public string TableName
+        {
+            get { return _sqlTableName; }
+        }
+
+        public static Dictionary<string, DataFieldAttribute> _sqlField = EntityHelper.GetFieldAttributes<T>(_sqlTableName);
+        public Dictionary<string, DataFieldAttribute> SqlFields
+        {
+            get { return _sqlField; }
+        }
 
         public SqlFactoryBase()
         {

@@ -30,7 +30,7 @@ namespace AccidentallyORM.SqlFactory
                 Sql.Append(" ");
             }
 
-            Sql.Append(select);
+            _sqlFields.Append(select);
 
             return this;
         }

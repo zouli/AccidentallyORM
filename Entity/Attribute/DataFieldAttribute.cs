@@ -13,6 +13,7 @@ namespace AccidentallyORM.Entity.Attribute
             CanNull = false;
             Default = string.Empty;
             ConvertFormat = string.Empty;
+            UsePrefix = true;
         }
 
         public string FieldName { get; set; }
@@ -28,5 +29,7 @@ namespace AccidentallyORM.Entity.Attribute
         public string Default { get; set; }
 
         public string ConvertFormat { get; set; }
+
+        public bool UsePrefix { get; set; }
     }
 }

@@ -21,7 +21,7 @@ namespace AccidentallyORM.SqlFactory
         public SqlInsertFactory<T> Insert()
         {
             Sql.Append("INSERT INTO ");
-            Sql.Append(SqlTableName);
+            Sql.Append(TableName);
             return this;
         }
 
@@ -98,7 +98,7 @@ namespace AccidentallyORM.SqlFactory
                 }
                 else
                 {
-                    var paraName = SqlParameter.GetParameterName(field.Value.FieldName);
+                    var paraName = SqlParameter.GetParameterName(field.Value.FieldName.Replace(".", "_"));
                     Sql.Append(paraName + ",");
                     Parameters.Add(paraName, field.Value.ColumnType, entity.GetValue(field.Key));
                 }
@@ -126,7 +126,7 @@ namespace AccidentallyORM.SqlFactory
                 }
                 else
                 {
-                    var paraName = SqlParameter.GetParameterName(field.Value.FieldName);
+                    var paraName = SqlParameter.GetParameterName(field.Value.FieldName.Replace(".", "_"));
                     Sql.Append(paraName + ",");
                     Parameters.Add(paraName, field.Value.ColumnType, entity.GetValue(field.Key));
                 }
@@ -134,6 +134,21 @@ namespace AccidentallyORM.SqlFactory
             Sql.Remove(Sql.Length - 1, 1);
             Sql.Append(")");
             return this;
+        }
+
+        public int Raw(string sql)
+        {
+            return Raw(sql, new SqlParameter());
+        }
+
+        public int Raw(string sql, SqlParameter parameters)
+        {
+            Parameters = parameters;
+            if (Parameters.Count > 0)
+            {
+                return SqlHelper.ExecuteNonQuery(sql, Parameters.ToArray());
+            }
+            return SqlHelper.ExecuteNonQuery(sql);
         }
 
         public int Go()

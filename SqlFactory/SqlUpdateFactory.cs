@@ -15,7 +15,7 @@ namespace AccidentallyORM.SqlFactory
         private SqlUpdateFactory<T> Update()
         {
             Sql.Append("UPDATE ");
-            Sql.Append(SqlTableName);
+            Sql.Append(TableName);
             return this;
         }
 
@@ -58,7 +58,7 @@ namespace AccidentallyORM.SqlFactory
                 }
                 else
                 {
-                    var paraName = SqlParameter.GetParameterName(field.FieldName);
+                    var paraName = SqlParameter.GetParameterName(field.FieldName.Replace(".", "_"));
                     setString += " = " + paraName;
                     Parameters.Add(paraName, field.ColumnType, value);
                 }
@@ -69,7 +69,6 @@ namespace AccidentallyORM.SqlFactory
 
             return this;
         }
-
 
         public SqlUpdateFactory<T> Where<TSub>(SqlField<TSub> sqlField) where TSub : EntityBase, new()
         {
@@ -88,6 +87,21 @@ namespace AccidentallyORM.SqlFactory
                 return SqlHelper.ExecuteNonQuery(ToSql(), Parameters.ToArray());
             }
             return SqlHelper.ExecuteNonQuery(ToSql());
+        }
+
+        public int Raw(string sql)
+        {
+            return Raw(sql, new SqlParameter());
+        }
+
+        public int Raw(string sql, SqlParameter parameters)
+        {
+            Parameters = parameters;
+            if (Parameters.Count > 0)
+            {
+                return SqlHelper.ExecuteNonQuery(sql, Parameters.ToArray());
+            }
+            return SqlHelper.ExecuteNonQuery(sql);
         }
 
         public override string ToSql()

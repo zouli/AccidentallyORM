@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 using AccidentallyORM.Entity;
 using AccidentallyORM.SqlFieldFactory;
 
@@ -11,7 +12,7 @@ namespace AccidentallyORM.SqlFactory
         private void From()
         {
             Sql.Append(" FROM ");
-            Sql.Append(SqlTableName);
+            Sql.Append(TableName);
         }
 
         public SqlDeleteFactory<T> Delete()
@@ -31,6 +32,21 @@ namespace AccidentallyORM.SqlFactory
             Parameters.AddRange(sqlField.Parameters);
 
             return this;
+        }
+
+        public int Raw(string sql)
+        {
+            return Raw(sql, new SqlParameter());
+        }
+
+        public int Raw(string sql, SqlParameter parameters)
+        {
+            Parameters = parameters;
+            if (Parameters.Count > 0)
+            {
+                return SqlHelper.ExecuteNonQuery(sql, Parameters.ToArray());
+            }
+            return SqlHelper.ExecuteNonQuery(sql);
         }
 
         public int Go()

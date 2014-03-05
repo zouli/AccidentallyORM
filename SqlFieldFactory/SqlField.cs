@@ -74,16 +74,24 @@ namespace AccidentallyORM.SqlFieldFactory
 
         private static SqlField<T> BuildOperator(SqlField<T> compare, object value, string operatorString)
         {
-            if (null == compare.LastField)
+            if (value.GetType().Name == typeof(SqlField<T>).Name)
             {
                 compare.CompareString.Append(operatorString + value);
             }
             else
             {
-                var paraName = SqlParameter.GetParameterName(compare.LastField.FieldName);
 
-                compare.CompareString.Append(operatorString + paraName);
-                compare.Parameters.Add(paraName, compare.LastField.ColumnType, value);
+                if (null == compare.LastField)
+                {
+                    compare.CompareString.Append(operatorString + value);
+                }
+                else
+                {
+                    var paraName = SqlParameter.GetParameterName(compare.LastField.FieldName.Replace(".", "_"));
+
+                    compare.CompareString.Append(operatorString + paraName);
+                    compare.Parameters.Add(paraName, compare.LastField.ColumnType, value);
+                }
             }
             return compare;
         }
